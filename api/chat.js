@@ -1,4 +1,3 @@
-// api/chat.js
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.status(405).send({ error: "Only POST allowed" });
@@ -12,7 +11,7 @@ export default async function handler(req, res) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.GROQ_API_KEY}`  // Your key is read from Vercel env
+        "Authorization": `Bearer ${process.env.GROQ_API_KEY}`  // key stored in Vercel
       },
       body: JSON.stringify(body)
     });
