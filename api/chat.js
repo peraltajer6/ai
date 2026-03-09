@@ -2,14 +2,14 @@
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Only POST allowed" });
 
-  const body = req.body; // <- do NOT parse JSON manually
+  const body = req.body; // frontend sends JSON, no need to parse manually
 
   try {
     const response = await fetch("https://api.groq.ai/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
+        "Authorization": `Bearer ${process.env.GROQ_API_KEY}` // your key is safe here
       },
       body: JSON.stringify(body)
     });
