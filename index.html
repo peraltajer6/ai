@@ -25,7 +25,7 @@
 </div>
 
 <script>
-const VERCEL_ENDPOINT = "/api/chat"; // Calls your serverless function
+const VERCEL_ENDPOINT = "/api/chat"; // calls your serverless function
 
 const SYSTEM_PROMPT = `
 You are an AI that acts like Jeremy.
@@ -63,7 +63,7 @@ async function sendMessage() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "llama3-8b-8192",
+        model: "gpt-3.5-mini",   // any Groq model you want
         messages: messageHistory
       })
     });
