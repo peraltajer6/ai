@@ -1,81 +1,57 @@
-const chatBox = document.getElementById("chat-box");
-const userInput = document.getElementById("user-input");
-const sendBtn = document.getElementById("send-btn");
+import fetch from "node-fetch";
 
-let messageHistory = JSON.parse(localStorage.getItem("messageHistory")) || [
-  { role: "system", content: "You are Jeremy, a curious and funny AI." }
-];
+export default async function handler(req, res) {
+  console.log("Received request:", req.method);
 
-function appendMessage(sender, text) {
-  const div = document.createElement("div");
-  div.textContent = text;
-  div.style.margin = "5px 0";
-  div.style.padding = "8px";
-  div.style.borderRadius = "8px";
-  div.style.maxWidth = "80%";
-  div.style.wordWrap = "break-word";
-
-  if (sender === "AI") {
-    div.style.background = "#e0f0ff";
-    div.style.alignSelf = "flex-start";
-  } else {
-    div.style.background = "#d4edda";
-    div.style.alignSelf = "flex-end";
+  if (req.method !== "POST") {
+    console.log("Method not allowed:", req.method);
+    return res.status(405).json({ error: "Only POST allowed" });
   }
 
-  chatBox.appendChild(div);
-  chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-function updateLastAIMessage(text) {
-  const messages = chatBox.querySelectorAll("div");
-  for (let i = messages.length - 1; i >= 0; i--) {
-    if (messages[i].textContent === "…thinking…") {
-      messages[i].textContent = text;
-      messages[i].style.background = "#e0f0ff";
-      break;
-    }
+  let body;
+  try {
+    body = req.body;
+    console.log("Request body:", body);
+  } catch (err) {
+    console.error("Failed to parse JSON body:", err);
+    return res.status(400).json({ error: "Invalid JSON body" });
   }
-  chatBox.scrollTop = chatBox.scrollHeight;
-}
 
-async function sendMessage() {
-  const message = userInput.value.trim();
-  if (!message) return;
-
-  appendMessage("You", message);
-  userInput.value = "";
-  appendMessage("AI", "…thinking…");
-
-  messageHistory.push({ role: "user", content: message });
-  localStorage.setItem("messageHistory", JSON.stringify(messageHistory));
+  if (!process.env.GROQ_API_KEY) {
+    console.error("GROQ_API_KEY is missing!");
+    return res.status(500).json({ error: "GROQ_API_KEY not set" });
+  }
 
   try {
-    const response = await fetch("/api/chat", {
+    const groqResponse = await fetch("https://api.groq.ai/v1/chat/completions", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ model: "gpt-3.5-mini", messages: messageHistory })
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
+      },
+      body: JSON.stringify(body)
     });
 
-    const data = await response.json();
-    const aiMessage = data.choices?.[0]?.message?.content || "[No response]";
-    updateLastAIMessage(aiMessage);
+    const text = await groqResponse.text(); // get text first for debug
 
-    messageHistory.push({ role: "assistant", content: aiMessage });
-    localStorage.setItem("messageHistory", JSON.stringify(messageHistory));
+    if (!groqResponse.ok) {
+      console.error("Groq API error:", groqResponse.status, text);
+      return res.status(500).json({ error: `Groq API error: ${groqResponse.status} - ${text}` });
+    }
+
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (err) {
+      console.error("Failed to parse Groq response as JSON:", text);
+      return res.status(500).json({ error: "Invalid JSON from Groq", raw: text });
+    }
+
+    console.log("Groq API response:", data);
+    res.status(200).json(data);
 
   } catch (err) {
-    updateLastAIMessage("[Error: " + err.message + "]");
+    console.error("Fetch to Groq failed:", err);
+    res.status(500).json({ error: "fetch failed", details: err.message });
   }
 }
-
-sendBtn.addEventListener("click", sendMessage);
-userInput.addEventListener("keypress", e => { if (e.key === "Enter") sendMessage(); });
-
-// Load saved messages
-window.addEventListener("load", () => {
-  messageHistory.forEach(msg => {
-    if (msg.role === "user") appendMessage("You", msg.content);
-    if (msg.role === "assistant") appendMessage("AI", msg.content);
-  });
-});
