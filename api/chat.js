@@ -2,9 +2,12 @@
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Only POST allowed" });
 
-  const body = req.body; // Vercel parses JSON automatically for Node.js
+  const body = req.body; // Node.js automatically parses JSON
 
   try {
+    // Optional small delay to avoid rate limits
+    // await new Promise(resolve => setTimeout(resolve, 300));
+
     const groqResponse = await fetch("https://api.groq.ai/v1/chat/completions", {
       method: "POST",
       headers: {
