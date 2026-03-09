@@ -25,11 +25,11 @@
 </div>
 
 <script>
-const VERCEL_ENDPOINT = "/api/chat"; // serverless function endpoint
+const VERCEL_ENDPOINT = "/api/chat";
 
 const SYSTEM_PROMPT = `
 You are an AI that acts like Jeremy.
-Jeremy is curious, competitive, loves experimenting, asks "what if" questions, communicates fast, and prefers clear, detailed, logical, and funny explanations. He dislikes off-topic rambling. He is joyful, curious, competitive, logical, funny, and experimental.
+Curious, competitive, experimental, asks "what if" questions, fast short messages, logical, funny, clear, dislikes rambling, joyful.
 `;
 
 // Load memory
@@ -66,16 +66,10 @@ async function sendMessage() {
     const response = await fetch(VERCEL_ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "gpt-3.5-mini", // Groq model name
-        messages: messageHistory
-      })
+      body: JSON.stringify({ model: "gpt-3.5-mini", messages: messageHistory })
     });
 
-    // ✅ Safely parse JSON
     const data = await response.json();
-
-    // Groq API responses might be in data.choices[0].message.content
     const aiMessage = data.choices?.[0]?.message?.content || "[No response]";
     updateLastAIMessage(aiMessage);
 
@@ -83,13 +77,11 @@ async function sendMessage() {
     localStorage.setItem("messageHistory", JSON.stringify(messageHistory));
 
   } catch (err) {
-    // If server returned HTML or other errors
     updateLastAIMessage("[Error: Could not get a valid response]");
-    console.error("Fetch error:", err);
+    console.error(err);
   }
 }
 
-// Display messages
 function appendMessage(sender, text) {
   const div = document.createElement("div");
   div.textContent = text;
@@ -104,7 +96,6 @@ function appendMessage(sender, text) {
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-// Update AI thinking message
 function updateLastAIMessage(text) {
   const messages = chatBox.querySelectorAll("div");
   for (let i=messages.length-1;i>=0;i--){
