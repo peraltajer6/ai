@@ -2,20 +2,14 @@
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Only POST allowed" });
 
-  let body;
-  try {
-    // parse JSON from request
-    body = JSON.parse(req.body);
-  } catch (err) {
-    return res.status(400).json({ error: "Invalid JSON" });
-  }
+  const body = req.body; // <- do NOT parse JSON manually
 
   try {
     const response = await fetch("https://api.groq.ai/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.GROQ_API_KEY}` // your secret key in Vercel
+        "Authorization": `Bearer ${process.env.GROQ_API_KEY}`
       },
       body: JSON.stringify(body)
     });
