@@ -1,12 +1,13 @@
 {
   "name": "my-ai-chat",
   "version": "1.0.0",
+  "type": "module",
   "main": "api/chat.js",
   "scripts": {
     "start": "node api/chat.js"
   },
   "dependencies": {
-    "node-fetch": "^3.4.0"
+    "node-fetch": "^3.3.2"
   },
   "engines": {
     "node": "24.x"
